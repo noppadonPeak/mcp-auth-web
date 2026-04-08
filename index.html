@@ -57,23 +57,26 @@
                 const password = ref('1234');
                 const redirectUri = ref('');
                 const clientId = ref('');
+                const sessionId = ref('');
 
                 onMounted(() => {
                     const params = new URLSearchParams(window.location.search);
                     redirectUri.value = params.get('redirect_uri');
                     clientId.value = params.get('client_id');
+                    sessionId.value = params.get('session_id');
+
                 });
 
                 const handleLogin = () => {
                     // ในระบบจริงต้องตรวจสอบ Username/Password กับ DB
                     // แต่ที่นี่เราจะ Redirect กลับทันทีพร้อม Random Code
                     const randomCode = Math.random().toString(36).substring(7);
-                    const finalUrl = `${redirectUri.value}?code=${randomCode}`;
+                    const finalUrl = `${redirectUri.value}?code=${randomCode}&session_id=${sessionId.value}`;
                     
                     window.location.href = finalUrl;
                 };
 
-                return { username, password, redirectUri, clientId, handleLogin };
+                return { username, password, redirectUri, clientId, sessionId,  handleLogin };
             }
         }).mount('#app');
     </script>
