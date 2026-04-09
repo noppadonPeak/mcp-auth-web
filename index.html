@@ -3,48 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mock OAuth Provider</title>
+    <title>Peak MCP | Authentication</title>
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top left, #1e293b, #0f172a);
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .input-glow:focus {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+    </style>
 </head>
-<body class="bg-slate-50 flex items-center justify-center min-h-screen">
-    <div id="app" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
-        <div v-if="!redirectUri" class="text-center">
-            <div class="text-red-500 text-5xl mb-4">⚠️</div>
-            <h1 class="text-xl font-bold text-slate-800">Invalid Request</h1>
-            <p class="text-slate-500 mt-2">หน้านี้ต้องถูกเรียกมาจาก MCP Server พร้อมพารามิเตอร์ที่ถูกต้อง</p>
+<body class="flex items-center justify-center min-h-screen p-4 overflow-hidden">
+    <!-- Animated Background Blobs -->
+    <div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+
+    <div id="app" class="w-full max-w-lg animate-fade-in z-10">
+        <!-- Error State -->
+        <div v-if="!redirectUri" class="glass p-10 rounded-3xl shadow-2xl text-center border border-red-500/20">
+            <div class="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            <h1 class="text-2xl font-bold text-white mb-3">Invalid Session</h1>
+            <p class="text-slate-400 mb-8">This authentication page requires valid session parameters from the MCP server.</p>
+            <div class="text-xs text-slate-500 uppercase tracking-widest font-semibold border-t border-white/5 pt-6">
+                Error Code: ERR_MISSING_PARAMS
+            </div>
         </div>
 
-        <div v-else>
-            <header class="text-center mb-8">
-                <div class="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+        <!-- Login Form -->
+        <div v-else class="glass p-10 rounded-3xl shadow-2xl relative overflow-hidden">
+            <header class="text-center mb-10">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/25 mb-6 rotate-3">
                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
                     </svg>
                 </div>
-                <h1 class="text-2xl font-bold text-slate-800">Mock Auth Service</h1>
-                <p class="text-slate-500 mt-1">ยินดีต้อนรับ! กรุณาเข้าสู่ระบบ</p>
+                <h1 class="text-3xl font-bold text-white tracking-tight">Connect to Peak</h1>
+                <p class="text-slate-400 mt-2">Enter your credentials to authorize MCP</p>
             </header>
 
-            <form @submit.prevent="handleLogin" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">ชื่อผู้ใช้งาน (Username)</label>
-                    <input v-model="username" type="text" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition" placeholder="admin">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">รหัสผ่าน (Password)</label>
-                    <input v-model="password" type="password" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition" placeholder="1234">
-                </div>
-
-                <div class="bg-blue-50 p-4 rounded-lg text-sm text-blue-700 border border-blue-100 mb-4">
-                    <p><strong>App:</strong> {{ clientId }}</p>
-                    <p><strong>Redirect:</strong> {{ redirectUri }}</p>
+            <form @submit.prevent="handleLogin" class="space-y-5">
+                <!-- User Token -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-slate-300 ml-1">User Token</label>
+                    <input v-model="userToken" type="text" 
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all input-glow" 
+                        placeholder="Enter your user token" required>
                 </div>
 
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition transform active:scale-95">
-                    Login and Authorize
+                <!-- Connection ID -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-slate-300 ml-1">Connection ID</label>
+                    <input v-model="connectionId" type="text" 
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all input-glow" 
+                        placeholder="Enter connection identifier" required>
+                </div>
+
+                <!-- Password -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-slate-300 ml-1">Password</label>
+                    <input v-model="password" type="password" 
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all input-glow" 
+                        placeholder="••••••••" required>
+                </div>
+
+                <!-- Context Info -->
+                <div class="flex flex-col gap-2 p-4 bg-white/5 rounded-2xl border border-white/5 text-xs text-slate-400 mt-6">
+                    <div class="flex justify-between">
+                        <span class="font-medium opacity-60">Client:</span>
+                        <span class="text-blue-400 truncate ml-4">{{ clientId || 'Unknown' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium opacity-60">Session ID:</span>
+                        <span class="text-indigo-400 truncate ml-4">{{ sessionId || 'None' }}</span>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" 
+                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/20 transition-all transform active:scale-[0.98] mt-4 flex items-center justify-center group">
+                    <span class="mr-2">Authorize Access</span>
+                    <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                    </svg>
                 </button>
             </form>
+
+            <!-- Footer Decoration -->
+            <div class="mt-8 pt-6 border-t border-white/5 text-center">
+                <p class="text-[10px] text-slate-500 uppercase tracking-[0.2em]">Secure Authentication Gateway</p>
+            </div>
         </div>
     </div>
 
@@ -53,8 +124,9 @@
 
         createApp({
             setup() {
-                const username = ref('admin');
-                const password = ref('1234');
+                const userToken = ref('');
+                const connectionId = ref('');
+                const password = ref('');
                 const redirectUri = ref('');
                 const clientId = ref('');
                 const sessionId = ref('');
@@ -64,19 +136,31 @@
                     redirectUri.value = params.get('redirect_uri');
                     clientId.value = params.get('client_id');
                     sessionId.value = params.get('session_id');
-
                 });
 
                 const handleLogin = () => {
-                    // ในระบบจริงต้องตรวจสอบ Username/Password กับ DB
-                    // แต่ที่นี่เราจะ Redirect กลับทันทีพร้อม Random Code
+                    // Logic for redirection back to caller
+                    // In a real scenario, you might POST these to /api/tokens first
                     const randomCode = Math.random().toString(36).substring(7);
+                    
+                    // We include the session_id to maintain context
                     const finalUrl = `${redirectUri.value}?code=${randomCode}&session_id=${sessionId.value}`;
+                    
+                    // Add subtle loading state before redirect
+                    console.log('Authorizing...', { userToken: userToken.value, connectionId: connectionId.value });
                     
                     window.location.href = finalUrl;
                 };
 
-                return { username, password, redirectUri, clientId, sessionId,  handleLogin };
+                return { 
+                    userToken, 
+                    connectionId, 
+                    password, 
+                    redirectUri, 
+                    clientId, 
+                    sessionId, 
+                    handleLogin 
+                };
             }
         }).mount('#app');
     </script>
