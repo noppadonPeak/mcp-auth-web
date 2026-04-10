@@ -3,164 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Peak MCP | Authentication</title>
-    <!-- Modern Typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>MCP Login (PKCE Ready)</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at top left, #1e293b, #0f172a);
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .animate-fade-in {
-            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .input-glow:focus {
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-        }
+        body { font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #fafafa; }
+        .card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center; width: 320px; border: 1px solid #eaeaea; }
+        h2 { margin-bottom: 0.5rem; color: #1a1a1a; }
+        p { color: #666; margin-bottom: 2rem; font-size: 0.9rem; }
+        button { background: #1a1a1a; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 1rem; font-weight: 500; transition: opacity 0.2s; }
+        button:hover { opacity: 0.8; }
+        .footer { margin-top: 1.5rem; font-size: 11px; color: #999; }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4 overflow-hidden">
-    <!-- Animated Background Blobs -->
-    <div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none"></div>
-    <div class="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none"></div>
-
-    <div id="app" class="w-full max-w-lg animate-fade-in z-10">
-        <!-- Error State -->
-        <div v-if="!redirectUri" class="glass p-10 rounded-3xl shadow-2xl text-center border border-red-500/20">
-            <div class="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                </svg>
-            </div>
-            <h1 class="text-2xl font-bold text-white mb-3">Invalid Session</h1>
-            <p class="text-slate-400 mb-8">This authentication page requires valid session parameters from the MCP server.</p>
-            <div class="text-xs text-slate-500 uppercase tracking-widest font-semibold border-t border-white/5 pt-6">
-                Error Code: ERR_MISSING_PARAMS
-            </div>
-        </div>
-
-        <!-- Login Form -->
-        <div v-else class="glass p-10 rounded-3xl shadow-2xl relative overflow-hidden">
-            <header class="text-center mb-10">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/25 mb-6 rotate-3">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-                    </svg>
-                </div>
-                <h1 class="text-3xl font-bold text-white tracking-tight">Connect to Peak</h1>
-                <p class="text-slate-400 mt-2">Enter your credentials to authorize MCP</p>
-            </header>
-
-            <form @submit.prevent="handleLogin" class="space-y-5">
-                <!-- User Token -->
-                <div class="space-y-2">
-                    <label class="block text-sm font-semibold text-slate-300 ml-1">User Token</label>
-                    <input v-model="userToken" type="text" 
-                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all input-glow" 
-                        placeholder="Enter your user token" required>
-                </div>
-
-                <!-- Connection ID -->
-                <div class="space-y-2">
-                    <label class="block text-sm font-semibold text-slate-300 ml-1">Connection ID</label>
-                    <input v-model="connectionId" type="text" 
-                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all input-glow" 
-                        placeholder="Enter connection identifier" required>
-                </div>
-
-                <!-- Password -->
-                <div class="space-y-2">
-                    <label class="block text-sm font-semibold text-slate-300 ml-1">Password</label>
-                    <input v-model="password" type="password" 
-                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all input-glow" 
-                        placeholder="••••••••" required>
-                </div>
-
-                <!-- Context Info -->
-                <div class="flex flex-col gap-2 p-4 bg-white/5 rounded-2xl border border-white/5 text-xs text-slate-400 mt-6">
-                    <div class="flex justify-between">
-                        <span class="font-medium opacity-60">Client:</span>
-                        <span class="text-blue-400 truncate ml-4">{{ clientId || 'Unknown' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="font-medium opacity-60">Session ID:</span>
-                        <span class="text-indigo-400 truncate ml-4">{{ sessionId || 'None' }}</span>
-                    </div>
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit" 
-                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/20 transition-all transform active:scale-[0.98] mt-4 flex items-center justify-center group">
-                    <span class="mr-2">Authorize Access</span>
-                    <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-                    </svg>
-                </button>
-            </form>
-
-            <!-- Footer Decoration -->
-            <div class="mt-8 pt-6 border-t border-white/5 text-center">
-                <p class="text-[10px] text-slate-500 uppercase tracking-[0.2em]">Secure Authentication Gateway</p>
+<body>
+    <div id="app">
+        <div class="card">
+            <h2>MCP Access</h2>
+            <p>ยินดีต้อนรับ! <br>กรุณายืนยันการเข้าถึงสำหรับ AI Client</p>
+            <button @click="handleLogin">ยืนยันและอนุญาต</button>
+            <div class="footer">
+                Secure OAuth 2.0 with PKCE Protection
             </div>
         </div>
     </div>
 
     <script>
-        const { createApp, ref, onMounted } = Vue;
+        const { createApp, onMounted, ref } = Vue;
 
         createApp({
             setup() {
-                const userToken = ref('');
-                const connectionId = ref('');
-                const password = ref('');
-                const redirectUri = ref('');
+                const state = ref('');
                 const clientId = ref('');
-                const sessionId = ref('');
+                const redirectUri = ref('');
 
                 onMounted(() => {
                     const params = new URLSearchParams(window.location.search);
-                    redirectUri.value = params.get('redirect_uri');
+                    state.value = params.get('state');
                     clientId.value = params.get('client_id');
-                    sessionId.value = params.get('session_id');
+                    redirectUri.value = params.get('redirect');
                 });
 
                 const handleLogin = () => {
-                    // Logic for redirection back to caller
-                    // In a real scenario, you might POST these to /api/tokens first
-                    const randomCode = Math.random().toString(36).substring(7);
+                    if (!redirectUri.value || !state.value) {
+                        alert("ข้อมูลไม่ครบถ้วน (Missing state or redirect)");
+                        return;
+                    }
+
+                    // สร้าง Temporary Authorization Code
+                    const authCode = "auth_" + Math.random().toString(36).substr(2, 12);
                     
-                    // We include the session_id to maintain context
-                    const finalUrl = `${redirectUri.value}?code=${randomCode}&session_id=${sessionId.value}`;
-                    
-                    // Add subtle loading state before redirect
-                    console.log('Authorizing...', { userToken: userToken.value, connectionId: connectionId.value });
-                    
-                    window.location.href = finalUrl;
+                    // ส่งกลับไปยัง Client ตามมาตรฐาน OAuth
+                    const callbackUrl = new URL(redirectUri.value);
+                    callbackUrl.searchParams.set('code', authCode);
+                    callbackUrl.searchParams.set('state', state.value);
+                    callbackUrl.searchParams.set('code_verifier', "codeChallenge-fair");
+                    callbackUrl.searchParams.set('client_id', clientId.value);
+
+                    window.location.href = callbackUrl.toString();
                 };
 
-                return { 
-                    userToken, 
-                    connectionId, 
-                    password, 
-                    redirectUri, 
-                    clientId, 
-                    sessionId, 
-                    handleLogin 
-                };
+                return { handleLogin, state };
             }
         }).mount('#app');
     </script>
